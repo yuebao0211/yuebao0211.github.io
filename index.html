@@ -3,512 +3,342 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>科研创新项目申报书: tFUS-mPFC-PD抑郁模型</title>
+    <title>Gemini 对话记录查看插件</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- Chosen Palette: Clinical Teal & Slate - Professional, calm, trustworthy for medical research. 
-         Background: Slate-50/100. Primary: Teal-600. Secondary: Slate-700. Accent: Amber-500 (for findings). -->
-    
-    <!-- Application Structure Plan: 
-         1. Dashboard View: High-level summary of the grant (Budget, Time, Key Stats) - mimicking the 'Basic Info' page.
-         2. Logic & Rationale (The Core Text): A tabbed interface to build the "Project Design Argumentation" (6000 words logic).
-            Broken into: Background/Significance, Research Content, & Innovation. This allows the user to copy logic directly.
-         3. Experimental Visualization: A flow diagram (HTML/CSS) showing the 3-step technical route (Behavior -> Calcium/Spikes -> Mechanism).
-         4. Reference Library: A searchable table of 30+ papers to fulfill the bibliography requirement.
-    -->
-
-    <!-- Visualization & Content Choices:
-         - Budget Distribution: Chart.js Doughnut (Standard for grant finance).
-         - Timeline: Custom HTML/CSS Gantt bar (No SVG) to show the 3-year plan.
-         - Mechanism Diagram: CSS Grid/Flex layout with Unicode arrows to show tFUS -> Piezo1 -> Ca2+ -> Spikes -> Behavior.
-         - References: Interactive Data Table with filtering.
-    -->
-
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #334155; }
-        
-        /* Chart Container Styling per Requirements */
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 500px; /* Constrain width */
-            margin-left: auto;
-            margin-right: auto;
-            height: 300px;
-            max-height: 300px;
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
         }
-
-        /* Custom Scrollbar for text areas */
         .custom-scroll::-webkit-scrollbar { width: 8px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        .tab-active { border-bottom: 2px solid #0d9488; color: #0f766e; font-weight: 600; }
-        .tab-inactive { color: #64748b; font-weight: 400; }
-        .tab-inactive:hover { color: #0d9488; }
-
-        /* Flowchart Box Styling */
-        .flow-box {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 12px;
-            text-align: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            transition: all 0.2s;
-        }
-        .flow-box:hover {
-            border-color: #0d9488;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+        .custom-scroll::-webkit-scrollbar-track { background: #e2e8f0; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 999px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #64748b; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex flex-col">
-
-    <!-- Navigation -->
-    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <span class="text-2xl font-bold text-teal-700 mr-2">Research</span>
-                    <span class="text-2xl font-light text-slate-600">GrantOS</span>
+<body class="min-h-screen flex flex-col">
+    <header class="bg-white border-b border-slate-200">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl">🧩</span>
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-900">Gemini 对话记录查看插件</h1>
+                        <p class="text-slate-500">本地解析、无需上传，快速浏览 Gemini 聊天记录。</p>
+                    </div>
                 </div>
-                <div class="flex space-x-8 items-center" id="nav-container">
-                    <!-- Nav items injected by JS -->
+                <div class="flex flex-wrap gap-3">
+                    <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">本地解析</span>
+                    <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">支持 JSON 导入</span>
+                    <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">关键词检索</span>
                 </div>
             </div>
         </div>
-    </nav>
+    </header>
 
-    <!-- Main Content Area -->
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-        
-        <!-- HEADER SECTION: Dynamic Context -->
-        <div id="header-context" class="mb-8 p-6 bg-white rounded-xl shadow-sm border border-slate-200">
-            <h1 class="text-3xl font-bold text-slate-800 mb-2">项目概览：经颅聚焦超声(tFUS)干预PD抑郁</h1>
-            <p class="text-slate-600 max-w-4xl">
-                本项目旨在探索利用低强度经颅聚焦超声（LIPUS/tFUS）靶向刺激内侧前额叶皮层（mPFC），通过机械敏感离子通道（Piezo1/TRP）调节神经元钙活动与放电模式，进而改善帕金森病（PD）模型大鼠的抑郁焦虑样行为。本系统将协助你梳理逻辑、生成文本并管理参考文献。
-            </p>
-            <div class="mt-4 flex gap-3">
-                <span class="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-sm font-medium">mPFC 靶点</span>
-                <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">PD 抑郁共病</span>
-                <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">光纤记录</span>
-                <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">机械敏感通道</span>
+    <main class="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+        <section class="grid gap-6 lg:grid-cols-3">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h2 class="text-lg font-semibold text-slate-800">插件亮点</h2>
+                <ul class="mt-4 space-y-3 text-sm text-slate-600">
+                    <li>✅ 支持拖拽或粘贴 JSON，离线查看 Gemini 历史记录。</li>
+                    <li>✅ 自动识别多种导出格式，兼容常见的 Gemini/Takeout JSON。</li>
+                    <li>✅ 左侧对话列表 + 右侧消息详情，阅读更清晰。</li>
+                    <li>✅ 内置关键词搜索，快速定位历史内容。</li>
+                </ul>
             </div>
-        </div>
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2">
+                <h2 class="text-lg font-semibold text-slate-800">快速导入</h2>
+                <p class="text-sm text-slate-500 mt-2">请从 Gemini 导出或 Takeout 下载 JSON 文件，导入后即可浏览对话。</p>
+                <div class="mt-4 grid gap-4 md:grid-cols-2">
+                    <label class="flex flex-col gap-2">
+                        <span class="text-xs font-medium text-slate-500">上传 JSON 文件</span>
+                        <input id="fileInput" type="file" accept="application/json" class="block w-full text-sm text-slate-500 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200" />
+                    </label>
+                    <label class="flex flex-col gap-2">
+                        <span class="text-xs font-medium text-slate-500">粘贴 JSON 内容</span>
+                        <textarea id="jsonInput" rows="4" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder='粘贴 JSON 内容，例如 {"conversations": [...]}'></textarea>
+                    </label>
+                </div>
+                <div class="mt-4 flex flex-wrap gap-3">
+                    <button id="parseBtn" class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700">解析记录</button>
+                    <button id="clearBtn" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-600 text-sm font-semibold hover:bg-slate-200">清空数据</button>
+                    <span id="statusText" class="text-sm text-slate-500 self-center"></span>
+                </div>
+            </div>
+        </section>
 
-        <!-- CONTENT INJECTION CONTAINER -->
-        <div id="app-content" class="space-y-8">
-            <!-- Content will be rendered here by JS -->
-        </div>
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="border-b border-slate-200 p-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-800">对话浏览器</h2>
+                    <p class="text-sm text-slate-500">选择左侧对话即可查看消息详情。</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <input id="searchInput" type="text" placeholder="搜索对话标题或内容" class="w-full md:w-72 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                    <span id="countText" class="text-xs text-slate-500">0 条对话</span>
+                </div>
+            </div>
+            <div class="grid md:grid-cols-3 min-h-[420px]">
+                <aside class="border-r border-slate-200 p-4 custom-scroll overflow-y-auto">
+                    <div id="conversationList" class="space-y-3"></div>
+                </aside>
+                <div class="md:col-span-2 p-6 custom-scroll overflow-y-auto bg-slate-50">
+                    <div id="conversationDetail" class="space-y-4 text-sm text-slate-700">
+                        <div class="text-center text-slate-400">
+                            还没有导入对话记录，请先上传或粘贴 JSON。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
+        <section class="bg-slate-900 text-slate-100 rounded-2xl p-6">
+            <h2 class="text-lg font-semibold">插件使用说明</h2>
+            <ol class="mt-4 space-y-2 text-sm text-slate-300 list-decimal list-inside">
+                <li>在 Gemini 或 Google Takeout 下载聊天记录 JSON。</li>
+                <li>点击“上传 JSON 文件”或粘贴 JSON 内容。</li>
+                <li>解析后在左侧选择对话，右侧查看详情。</li>
+                <li>使用搜索栏快速定位关键词。</li>
+            </ol>
+        </section>
     </main>
 
-    <footer class="bg-slate-800 text-slate-300 py-8 mt-auto">
-        <div class="max-w-7xl mx-auto px-4 text-center">
-            <p class="text-sm">生成的文本仅供参考，请根据具体预实验结果进行调整。</p>
-            <p class="text-xs mt-2 text-slate-500">Designed for Northwest University Graduate Innovation Project</p>
+    <footer class="bg-white border-t border-slate-200">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-xs text-slate-400">
+            提示：此演示页面仅在本地解析 JSON，不会上传任何对话内容。
         </div>
     </footer>
 
-    <!-- JAVASCRIPT LOGIC -->
     <script>
-        // --- DATA STORE ---
+        const fileInput = document.getElementById('fileInput');
+        const jsonInput = document.getElementById('jsonInput');
+        const parseBtn = document.getElementById('parseBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const statusText = document.getElementById('statusText');
+        const searchInput = document.getElementById('searchInput');
+        const conversationList = document.getElementById('conversationList');
+        const conversationDetail = document.getElementById('conversationDetail');
+        const countText = document.getElementById('countText');
 
-        const projectData = {
-            basicInfo: {
-                title: "经颅聚焦超声靶向mPFC通过机械敏感通道调控PD大鼠抑郁行为的机制研究",
-                keywords: "经颅聚焦超声; 帕金森病抑郁; 内侧前额叶皮层; 光纤记录; 机械敏感离子通道",
-                type: "A. 基础研究",
-                budget: 2.0, // 万元
-                duration: "2025.01 - 2026.12"
-            },
-            references: [
-                { id: 1, text: "Legon, W., et al. (2014). Transcranial focused ultrasound modulates the activity of primary somatosensory cortex in humans. Nature Neuroscience, 17(2), 322-329.", tag: "tFUS基础" },
-                { id: 2, text: "Tyler, W. J., et al. (2018). Remote excitation of neuronal circuits using low-intensity, low-frequency ultrasound. PLoS One, 3(10), e3511.", tag: "tFUS机制" },
-                { id: 3, text: "Aarsland, D., et al. (2011). Depression in Parkinson disease—epidemiology, mechanisms and management. Nature Reviews Neurology, 8(1), 35-47.", tag: "PD抑郁" },
-                { id: 4, text: "Yoo, S. S., et al. (2011). Focused ultrasound modulates region-specific brain activity. Neuroimage, 56(3), 1267-1275.", tag: "tFUS应用" },
-                { id: 5, text: "Hameroff, S., et al. (2013). Transcranial ultrasound (TUS) effects on mental states: a pilot study. Brain Stimulation, 6(3), 409-415.", tag: "情绪调节" },
-                { id: 6, text: "Kubanek, J., et al. (2016). Ultrasound modulates ion channel currents. Scientific Reports, 6, 24170.", tag: "离子通道" },
-                { id: 7, text: "Coste, B., et al. (2010). Piezo1 and Piezo2 are essential components of distinct mechanically activated cation channels. Science, 330(6000), 55-60.", tag: "Piezo通道" },
-                { id: 8, text: "Famm, K., et al. (2013). Drug discovery: a jump-start for electroceuticals. Nature, 496(7444), 159-161.", tag: "物理治疗" },
-                { id: 9, text: "Cui, H., et al. (2019). Piezo1 channel mediates the mechanosensitivity of the mPFC neurons. Neuroscience Bulletin, 35, 1-12.", tag: "mPFC机制" },
-                { id: 10, text: "Winter, C., et al. (2009). High frequency stimulation and temporary inactivation of the subthalamic nucleus reduce depressive behaviour in the rat. Experimental Neurology, 216(2), 405-411.", tag: "PD治疗" },
-                { id: 11, text: "Zhang, D., et al. (2021). Ultrasound Neuromodulation of the mPFC Relieves Depression-Like Behavior in Mice. IEEE Trans Biomed Eng.", tag: "相关研究" },
-                { id: 12, text: "Castrioto, A., et al. (2016). Mood and behavioural effects of subthalamic stimulation in Parkinson's disease. The Lancet Neurology, 13(3), 287-305.", tag: "临床背景" },
-                { id: 13, text: "Gunaydin, L. A., et al. (2014). Natural neural projection dynamics underlying social behavior discrimination. Cell, 157(7), 1535-1551.", tag: "光纤记录" },
-                { id: 14, text: "Lammert, D. B., et al. (2020). Piezo1 is a mechanosensor in the CNS. Neuron, 108(1), 1-15.", tag: "机械通道" },
-                { id: 15, text: "Tufail, Y., et al. (2010). Transcranial pulsed ultrasound stimulates intact brain circuits. Neuron, 66(5), 681-694.", tag: "tFUS原理" },
-                { id: 16, text: "Vazey, E. M., & Aston-Jones, G. (2012). The emerging role of norepinephrine in cognitive dysfunctions of Parkinson's disease. Frontiers in Behavioral Neuroscience, 6, 48.", tag: "单胺递质" },
-                { id: 17, text: "Remy, P., et al. (2005). Depression in Parkinson's disease: loss of dopamine and noradrenaline innervation. Brain, 128(6), 1314-1322.", tag: "神经化学" },
-                { id: 18, text: "Ye, J., et al. (2016). Ultrasonic control of neural activity through activation of the mechanosensitive channel MscL. Nano Letters, 18(7), 4148–4155.", tag: "超声机制" },
-                { id: 19, text: "Nestler, E. J., et al. (2002). Neurobiology of depression. Neuron, 34(1), 13-25.", tag: "抑郁机制" },
-                { id: 20, text: "Paxinos, G., & Watson, C. (2007). The rat brain in stereotaxic coordinates. Academic Press.", tag: "实验方法" },
-                { id: 21, text: "Sassaroli, E., & Vykhodtseva, N. (2016). Acoustic neuromodulation: from physics to brain. Ultrasound in Medicine & Biology, 42(3), 633-649.", tag: "综述" },
-                { id: 22, text: "Bystritsky, A., et al. (2011). A review of low-intensity focused ultrasound pulsation. Brain Stimulation, 4(3), 125-136.", tag: "综述" },
-                { id: 23, text: "Kim, H., et al. (2020). Remote control of brain activity using transcranial focused ultrasound. Journal of Neuroscience Methods, 346, 108920.", tag: "方法学" },
-                { id: 24, text: "Wang, Y., et al. (2019). The effects of focused ultrasound on the dopaminergic system in Parkinson’s rats. Brain Research, 1710, 15-22.", tag: "PD超声" },
-                { id: 25, text: "Fan, Z., et al. (2022). Mechanical activation of mPFC neurons via Piezo1 alleviates anxiety. Nature Communications, 13, 1234.", tag: "关键参考" }
-            ],
-            sections: [
-                {
-                    id: 'rationale',
-                    title: "立项依据 (Rationale)",
-                    content: `
-                        <h3 class="text-lg font-bold text-slate-800 mb-2">1. 研究意义与临床背景</h3>
-                        <p class="mb-4 text-sm text-slate-600">帕金森病（PD）不仅表现为运动障碍，高达50%的患者伴有抑郁和焦虑（Aarsland et al., 2011）。目前药物治疗（L-DOPA）对非运动症状效果有限且副作用大。内侧前额叶皮层（mPFC）是情绪调节的核心脑区，PD患者mPFC功能连接异常减弱。经颅聚焦超声（tFUS）作为一种新型无创神经调控技术，具有高空间分辨率和深部穿透力，是干预深部脑区的理想工具（Legon et al., 2014）。</p>
-                        
-                        <h3 class="text-lg font-bold text-slate-800 mb-2">2. 国内外研究现状及分析</h3>
-                        <p class="mb-4 text-sm text-slate-600">既往研究表明，tFUS可以激活离子通道引发神经兴奋（Tyler et al., 2018）。虽然已有研究关注tFUS对运动皮层的调节，但其对<b>PD抑郁共病状态下mPFC神经环路</b>的具体调节机制尚不明确。特别是机械敏感通道（如Piezo1/TRP）是否介导了超声对mPFC神经元的兴奋作用，进而改善情感障碍，是当前亟待解决的科学问题。</p>
-                        
-                        <h3 class="text-lg font-bold text-slate-800 mb-2">3. 参考文献支撑</h3>
-                        <p class="mb-4 text-sm text-slate-600">本项目拟引用25篇以上文献，涵盖tFUS物理特性、mPFC情绪环路、机械敏感通道机制以及PD病理生理学。</p>
-                    `
-                },
-                {
-                    id: 'content',
-                    title: "研究内容 (Content)",
-                    content: `
-                        <h3 class="text-lg font-bold text-slate-800 mb-2">研究目标</h3>
-                        <p class="mb-4 text-sm text-slate-600">阐明tFUS改善PD大鼠抑郁行为的mPFC局部环路机制及分子靶点。</p>
-                        
-                        <h3 class="text-lg font-bold text-slate-800 mb-2">具体研究内容</h3>
-                        <div class="space-y-4">
-                            <div class="bg-slate-50 p-3 rounded border border-slate-200">
-                                <span class="font-bold text-teal-700">内容一：PD抑郁模型的建立与tFUS行为学评价</span>
-                                <p class="text-sm mt-1">采用6-OHDA单侧损毁黑质致密部（SNc）构建PD模型，结合慢性不可预见温和应激（CUMS）诱导抑郁样行为。使用旷场实验（OFT）、强迫游泳（FST）、糖水偏好（SPT）及高架十字迷宫（EPM）评估tFUS干预前后的焦虑抑郁水平。</p>
-                            </div>
-                            <div class="bg-slate-50 p-3 rounded border border-slate-200">
-                                <span class="font-bold text-teal-700">内容二：tFUS对mPFC神经元活动的实时调节效应</span>
-                                <p class="text-sm mt-1">利用<b>光纤记录（Fiber Photometry）</b>系统，在自由活动大鼠mPFC注射GCaMP6s病毒，实时记录tFUS刺激期间神经元钙信号变化。结合在体多通道电生理记录，分析神经元放电频率（Firing Rate）和局部场电位（LFP）改变。</p>
-                            </div>
-                            <div class="bg-slate-50 p-3 rounded border border-slate-200">
-                                <span class="font-bold text-teal-700">内容三：机械敏感通道机制及神经化学改变</span>
-                                <p class="text-sm mt-1">通过立体定位注射机械敏感通道阻断剂（如GsMTx4）至mPFC，观察其是否阻断tFUS的抗抑郁效应。利用高效液相色谱（HPLC）检测相关脑区（mPFC、NAc、DRN）多巴胺（DA）、5-羟色胺（5-HT）及其代谢产物含量。</p>
-                            </div>
-                        </div>
-                    `
-                },
-                {
-                    id: 'innovation',
-                    title: "创新点 (Innovation)",
-                    content: `
-                        <ul class="list-disc list-inside text-sm text-slate-600 space-y-2">
-                            <li><b>视点创新：</b>首次将tFUS无创神经调控技术应用于<b>PD抑郁共病</b>模型，聚焦于mPFC这一关键情绪枢纽。</li>
-                            <li><b>技术结合：</b>创新性结合<b>光纤记录</b>技术与超声刺激，实现了在自由活动状态下实时观测超声对深部脑区神经元钙活动的调节。</li>
-                            <li><b>机制探索：</b>从“物理刺激-机械通道-神经兴奋-行为改善”的完整链条出发，验证机械敏感离子通道（Mechanosensitive Ion Channels）在tFUS抗抑郁效应中的核心作用。</li>
-                        </ul>
-                    `
-                }
-            ]
-        };
+        let conversations = [];
+        let filteredConversations = [];
+        let selectedId = null;
 
-        let currentView = 'dashboard';
-        let currentTab = 'rationale';
-
-        // --- DOM ELEMENTS ---
-        const navContainer = document.getElementById('nav-container');
-        const appContent = document.getElementById('app-content');
-
-        // --- INITIALIZATION ---
-        function init() {
-            renderNav();
-            renderView(currentView);
+        function setStatus(message, type = 'info') {
+            const colorMap = {
+                info: 'text-slate-500',
+                success: 'text-emerald-600',
+                error: 'text-rose-600'
+            };
+            statusText.className = `text-sm ${colorMap[type]}`;
+            statusText.textContent = message;
         }
 
-        // --- RENDER FUNCTIONS ---
-        function renderNav() {
-            const views = [
-                { id: 'dashboard', label: '项目总览 Dashboard' },
-                { id: 'proposal', label: '申报书正文 Proposal' },
-                { id: 'experiments', label: '实验设计 Experiments' },
-                { id: 'references', label: '参考文献 References' }
-            ];
+        function normalizeMessages(rawMessages = []) {
+            return rawMessages
+                .map((msg) => {
+                    const role = msg.role || msg.author?.role || msg.author || msg.sender || msg.from || 'unknown';
+                    const time = msg.time || msg.timestamp || msg.created_at || msg.createdAt || '';
+                    let text = '';
 
-            navContainer.innerHTML = views.map(v => `
-                <button 
-                    onclick="switchView('${v.id}')"
-                    class="${currentView === v.id ? 'text-teal-700 font-bold bg-teal-50' : 'text-slate-500 hover:text-teal-600'} px-3 py-2 rounded-md text-sm transition-colors"
-                >
-                    ${v.label}
-                </button>
-            `).join('');
-        }
-
-        function switchView(viewId) {
-            currentView = viewId;
-            renderNav();
-            renderView(viewId);
-        }
-
-        function renderView(viewId) {
-            appContent.innerHTML = ''; // Clear content
-
-            if (viewId === 'dashboard') renderDashboard();
-            else if (viewId === 'proposal') renderProposal();
-            else if (viewId === 'experiments') renderExperiments();
-            else if (viewId === 'references') renderReferences();
-        }
-
-        // --- VIEW: DASHBOARD ---
-        function renderDashboard() {
-            appContent.innerHTML = `
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Key Stats -->
-                    <div class="col-span-1 space-y-6">
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                            <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">基本信息 Basic Info</h3>
-                            <div class="space-y-4">
-                                <div>
-                                    <span class="text-xs text-slate-500">申报类型</span>
-                                    <p class="font-semibold text-slate-800">${projectData.basicInfo.type}</p>
-                                </div>
-                                <div>
-                                    <span class="text-xs text-slate-500">经费预算</span>
-                                    <p class="font-semibold text-slate-800">${projectData.basicInfo.budget} 万元</p>
-                                </div>
-                                <div>
-                                    <span class="text-xs text-slate-500">研究周期</span>
-                                    <p class="font-semibold text-slate-800">${projectData.basicInfo.duration}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Budget Chart -->
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                            <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">经费预算 Budget</h3>
-                            <div class="chart-container">
-                                <canvas id="budgetChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Logical Abstract -->
-                    <div class="col-span-1 lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                        <h3 class="text-lg font-bold text-slate-800 mb-4">逻辑摘要 (Abstract Logic)</h3>
-                        <div class="relative pl-8 border-l-2 border-teal-200 space-y-8">
-                            <div class="relative">
-                                <span class="absolute -left-[41px] bg-teal-500 h-6 w-6 rounded-full border-4 border-white"></span>
-                                <h4 class="font-bold text-slate-800">临床问题</h4>
-                                <p class="text-slate-600 text-sm mt-1">PD患者常伴有严重的抑郁/焦虑，药物治疗效果欠佳。需要新的无创治疗手段。</p>
-                            </div>
-                            <div class="relative">
-                                <span class="absolute -left-[41px] bg-teal-500 h-6 w-6 rounded-full border-4 border-white"></span>
-                                <h4 class="font-bold text-slate-800">关键靶点</h4>
-                                <p class="text-slate-600 text-sm mt-1">mPFC（内侧前额叶）功能低下是PD抑郁的核心病理机制。tFUS可精准刺激mPFC。</p>
-                            </div>
-                            <div class="relative">
-                                <span class="absolute -left-[41px] bg-amber-500 h-6 w-6 rounded-full border-4 border-white"></span>
-                                <h4 class="font-bold text-slate-800">科学假设</h4>
-                                <p class="text-slate-600 text-sm mt-1">tFUS产生的声辐射力作用于神经元膜上的机械敏感通道（Piezo1/TRP），引起Ca2+内流，增强mPFC神经元兴奋性，增加单胺类递质释放，从而改善抑郁。</p>
-                            </div>
-                            <div class="relative">
-                                <span class="absolute -left-[41px] bg-teal-500 h-6 w-6 rounded-full border-4 border-white"></span>
-                                <h4 class="font-bold text-slate-800">预期成果</h4>
-                                <p class="text-slate-600 text-sm mt-1">发表SCI论文1-2篇，阐明tFUS抗PD抑郁的物理生物学机制。</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Render Budget Chart
-            setTimeout(() => {
-                const ctx = document.getElementById('budgetChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['实验材料费 (动物/试剂)', '测试化验加工费', '差旅/会议费', '出版/知识产权'],
-                        datasets: [{
-                            data: [60, 20, 10, 10],
-                            backgroundColor: ['#0d9488', '#f59e0b', '#64748b', '#94a3b8'],
-                            borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'bottom', labels: { boxWidth: 10 } }
-                        }
+                    if (typeof msg.text === 'string') {
+                        text = msg.text;
+                    } else if (typeof msg.content === 'string') {
+                        text = msg.content;
+                    } else if (Array.isArray(msg.parts)) {
+                        text = msg.parts.map((part) => part.text || part).join('');
+                    } else if (msg.content?.parts) {
+                        text = msg.content.parts.map((part) => part.text || part).join('');
+                    } else if (msg.content?.text) {
+                        text = msg.content.text;
+                    } else if (msg.message) {
+                        text = msg.message;
                     }
+
+                    return {
+                        role: String(role).toLowerCase(),
+                        time,
+                        text: text || '[无文本内容]'
+                    };
+                })
+                .filter((msg) => msg.text);
+        }
+
+        function normalizeConversations(raw) {
+            const source = Array.isArray(raw)
+                ? raw
+                : raw?.conversations || raw?.chats || raw?.history || raw?.data || [];
+
+            if (!Array.isArray(source)) {
+                return [];
+            }
+
+            return source.map((item, index) => {
+                const title = item.title || item.name || item.topic || `对话 ${index + 1}`;
+                const messages = normalizeMessages(item.messages || item.turns || item.items || item.conversation || []);
+                return {
+                    id: item.id || item.conversation_id || `conv-${index}`,
+                    title,
+                    messages,
+                    createdAt: item.created_at || item.createdAt || ''
+                };
+            });
+        }
+
+        function renderConversations() {
+            conversationList.innerHTML = '';
+            if (filteredConversations.length === 0) {
+                conversationList.innerHTML = '<div class="text-sm text-slate-400">未找到匹配的对话。</div>';
+                countText.textContent = '0 条对话';
+                return;
+            }
+
+            filteredConversations.forEach((conv) => {
+                const preview = conv.messages[0]?.text || '暂无消息';
+                const isActive = conv.id === selectedId;
+
+                const button = document.createElement('button');
+                button.className = `w-full text-left border rounded-xl p-3 transition ${
+                    isActive
+                        ? 'border-emerald-500 bg-emerald-50'
+                        : 'border-slate-200 hover:border-emerald-300 hover:bg-slate-50'
+                }`;
+                button.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="font-semibold text-slate-800 text-sm">${conv.title}</span>
+                        <span class="text-[10px] text-slate-400">${conv.createdAt || ''}</span>
+                    </div>
+                    <p class="mt-2 text-xs text-slate-500 line-clamp-2">${preview}</p>
+                `;
+                button.addEventListener('click', () => {
+                    selectedId = conv.id;
+                    renderConversations();
+                    renderConversationDetail(conv);
                 });
-            }, 100);
+
+                conversationList.appendChild(button);
+            });
+
+            countText.textContent = `${filteredConversations.length} 条对话`;
         }
 
-        // --- VIEW: PROPOSAL TEXT ---
-        function renderProposal() {
-            // Tab switching logic embedded
-            const tabsHTML = projectData.sections.map(s => `
-                <button onclick="currentTab = '${s.id}'; renderProposal()" 
-                    class="pb-2 text-sm font-medium transition-colors ${currentTab === s.id ? 'tab-active' : 'tab-inactive'}">
-                    ${s.title}
-                </button>
-            `).join('');
+        function renderConversationDetail(conv) {
+            if (!conv) {
+                conversationDetail.innerHTML = '<div class="text-center text-slate-400">请选择一个对话。</div>';
+                return;
+            }
 
-            const activeContent = projectData.sections.find(s => s.id === currentTab).content;
+            const messagesHTML = conv.messages
+                .map((msg) => {
+                    const isUser = msg.role.includes('user');
+                    const roleLabel = isUser ? '用户' : msg.role.includes('model') || msg.role.includes('assistant') ? 'Gemini' : msg.role;
 
-            appContent.innerHTML = `
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 min-h-[600px] flex flex-col">
-                    <div class="border-b border-slate-200 px-6 pt-4 flex space-x-6">
-                        ${tabsHTML}
-                    </div>
-                    <div class="p-8 flex-grow custom-scroll overflow-y-auto bg-slate-50/50">
-                        <div class="prose max-w-none text-slate-700 leading-relaxed">
-                            ${activeContent}
+                    return `
+                        <div class="p-4 rounded-xl border ${
+                            isUser ? 'border-emerald-200 bg-white' : 'border-slate-200 bg-slate-100'
+                        }">
+                            <div class="flex items-center justify-between mb-2 text-xs text-slate-500">
+                                <span>${roleLabel}</span>
+                                <span>${msg.time || ''}</span>
+                            </div>
+                            <div class="whitespace-pre-wrap text-sm text-slate-700">${msg.text}</div>
                         </div>
-                        <div class="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-700">
-                            提示：请将上述内容复制到Word文档的相应章节。注意根据实际字数要求进行扩充，重点描述技术路线的细节。
-                        </div>
-                    </div>
+                    `;
+                })
+                .join('');
+
+            conversationDetail.innerHTML = `
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-slate-800">${conv.title}</h3>
+                    <p class="text-xs text-slate-500">${conv.messages.length} 条消息</p>
                 </div>
+                <div class="space-y-3">${messagesHTML || '<div class="text-slate-400">此对话暂无消息。</div>'}</div>
             `;
         }
 
-        // --- VIEW: EXPERIMENTS (VISUALIZATION) ---
-        function renderExperiments() {
-            appContent.innerHTML = `
-                <div class="space-y-8">
-                    <!-- Title -->
-                    <div class="text-center">
-                        <h2 class="text-2xl font-bold text-slate-800">技术路线与实验设计</h2>
-                        <p class="text-slate-500">Technical Route & Experimental Design</p>
-                    </div>
-
-                    <!-- Flowchart Container -->
-                    <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
-                        <div class="min-w-[800px] flex flex-col items-center gap-8">
-                            
-                            <!-- Step 1: Model -->
-                            <div class="w-full flex justify-center">
-                                <div class="flow-box w-64 bg-slate-100">
-                                    <div class="font-bold text-slate-700">Step 1: 模型构建</div>
-                                    <div class="text-xs text-slate-500 mt-1">PD: 6-OHDA 损毁 SNc</div>
-                                    <div class="text-xs text-slate-500">Depression: CUMS 应激</div>
-                                </div>
-                            </div>
-
-                            <!-- Down Arrow -->
-                            <div class="text-slate-300 text-2xl">↓</div>
-
-                            <!-- Step 2: Intervention (tFUS) -->
-                            <div class="w-full flex justify-center">
-                                <div class="flow-box w-64 border-teal-500 bg-teal-50">
-                                    <div class="font-bold text-teal-800">Step 2: tFUS 干预</div>
-                                    <div class="text-xs text-teal-600 mt-1">靶点: mPFC</div>
-                                    <div class="text-xs text-teal-600">参数: 基波频率/占空比/强度</div>
-                                </div>
-                            </div>
-
-                            <!-- Down Arrow -->
-                            <div class="text-slate-300 text-2xl">↓</div>
-
-                            <!-- Step 3: Branching Methods -->
-                            <div class="grid grid-cols-3 gap-8 w-full">
-                                <!-- Branch A: Behavior -->
-                                <div class="flex flex-col items-center">
-                                    <div class="flow-box w-full h-full">
-                                        <div class="font-bold text-blue-700">行为学测试</div>
-                                        <div class="text-xs text-slate-500 mt-2 text-left px-2">
-                                            • 旷场实验 (OFT)<br>
-                                            • 高架十字 (EPM)<br>
-                                            • 糖水偏好 (SPT)<br>
-                                            • 强迫游泳 (FST)
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Branch B: Physio -->
-                                <div class="flex flex-col items-center">
-                                    <div class="flow-box w-full h-full border-amber-200">
-                                        <div class="font-bold text-amber-700">神经环路记录</div>
-                                        <div class="text-xs text-slate-500 mt-2 text-left px-2">
-                                            • 光纤记录 (Fiber Photometry)<br>
-                                            • 钙指示剂 (GCaMP6s)<br>
-                                            • 在体多通道记录<br>
-                                            • 放电频率 (Firing Rate)
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Branch C: Molecular -->
-                                <div class="flex flex-col items-center">
-                                    <div class="flow-box w-full h-full border-purple-200">
-                                        <div class="font-bold text-purple-700">分子机制 & 阻断</div>
-                                        <div class="text-xs text-slate-500 mt-2 text-left px-2">
-                                            • 机械敏感通道阻断剂<br>
-                                            • HPLC检测单胺递质<br>
-                                            • Western Blot (Piezo1/c-Fos)
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Convergence -->
-                            <div class="text-slate-300 text-2xl">↓</div>
-                            <div class="w-full flex justify-center">
-                                <div class="flow-box w-96 bg-slate-800 text-white border-none">
-                                    <div class="font-bold">结论</div>
-                                    <div class="text-xs text-slate-300 mt-1">tFUS 通过激活 mPFC 机械敏感通道改善 PD 抑郁</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+        function applyFilter(query) {
+            const lower = query.trim().toLowerCase();
+            filteredConversations = conversations.filter((conv) => {
+                const titleMatch = conv.title.toLowerCase().includes(lower);
+                const messageMatch = conv.messages.some((msg) => msg.text.toLowerCase().includes(lower));
+                return titleMatch || messageMatch;
+            });
+            selectedId = filteredConversations[0]?.id || null;
+            renderConversations();
+            renderConversationDetail(filteredConversations[0]);
         }
 
-        // --- VIEW: REFERENCES ---
-        function renderReferences() {
-            appContent.innerHTML = `
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-lg font-bold text-slate-800">参考文献库 Reference Library</h3>
-                        <input type="text" placeholder="搜索文献..." onkeyup="filterRefs(this.value)" class="border border-slate-300 rounded px-3 py-1 text-sm focus:outline-none focus:border-teal-500">
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left text-slate-600">
-                            <thead class="text-xs text-slate-700 uppercase bg-slate-50">
-                                <tr>
-                                    <th class="px-6 py-3">Tag</th>
-                                    <th class="px-6 py-3">Citation (APA Style)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="ref-table-body">
-                                ${projectData.references.map(ref => `
-                                    <tr class="bg-white border-b hover:bg-slate-50">
-                                        <td class="px-6 py-4 font-medium text-teal-600 whitespace-nowrap">${ref.tag}</td>
-                                        <td class="px-6 py-4">${ref.text}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
+        function loadData(raw) {
+            conversations = normalizeConversations(raw);
+            filteredConversations = [...conversations];
+            selectedId = conversations[0]?.id || null;
+
+            if (conversations.length === 0) {
+                setStatus('未识别到有效对话记录，请确认 JSON 格式。', 'error');
+                conversationList.innerHTML = '';
+                conversationDetail.innerHTML = '<div class="text-center text-slate-400">暂无可显示的对话。</div>';
+                countText.textContent = '0 条对话';
+                return;
+            }
+
+            setStatus(`成功导入 ${conversations.length} 条对话。`, 'success');
+            renderConversations();
+            renderConversationDetail(conversations[0]);
         }
 
-        function filterRefs(query) {
-            const lowerQuery = query.toLowerCase();
-            const filtered = projectData.references.filter(r => 
-                r.text.toLowerCase().includes(lowerQuery) || r.tag.toLowerCase().includes(lowerQuery)
-            );
-            const tbody = document.getElementById('ref-table-body');
-            tbody.innerHTML = filtered.map(ref => `
-                <tr class="bg-white border-b hover:bg-slate-50">
-                    <td class="px-6 py-4 font-medium text-teal-600 whitespace-nowrap">${ref.tag}</td>
-                    <td class="px-6 py-4">${ref.text}</td>
-                </tr>
-            `).join('');
-        }
+        parseBtn.addEventListener('click', () => {
+            const inputValue = jsonInput.value.trim();
+            if (!inputValue) {
+                setStatus('请先上传或粘贴 JSON 内容。', 'error');
+                return;
+            }
+            try {
+                const data = JSON.parse(inputValue);
+                loadData(data);
+            } catch (error) {
+                setStatus('JSON 解析失败，请检查格式。', 'error');
+            }
+        });
 
-        // Start
-        init();
+        clearBtn.addEventListener('click', () => {
+            jsonInput.value = '';
+            fileInput.value = '';
+            conversations = [];
+            filteredConversations = [];
+            selectedId = null;
+            setStatus('已清空数据。', 'info');
+            conversationList.innerHTML = '';
+            conversationDetail.innerHTML = '<div class="text-center text-slate-400">还没有导入对话记录，请先上传或粘贴 JSON。</div>';
+            countText.textContent = '0 条对话';
+        });
+
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    jsonInput.value = e.target.result;
+                    const data = JSON.parse(e.target.result);
+                    loadData(data);
+                } catch (error) {
+                    setStatus('文件解析失败，请确认 JSON 格式。', 'error');
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        searchInput.addEventListener('input', (event) => {
+            applyFilter(event.target.value);
+        });
+
+        setStatus('等待导入对话记录。', 'info');
     </script>
 </body>
 </html>
